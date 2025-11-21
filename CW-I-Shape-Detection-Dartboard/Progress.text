@@ -1,0 +1,16 @@
+### Deal with brechmark
+1. one-to-one TP detection
+
+### Shape detection
+1. First get region 
+2. Perform hough circle detection
+3. center filter and radius filter
+
+
+11/21
+TODO:
+1. Not a perfect circle
+2. Part of circle
+3. 视角差
+4. region not big enough
+5. region not accurate

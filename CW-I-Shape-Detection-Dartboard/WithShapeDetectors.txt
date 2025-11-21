@@ -1,0 +1,116 @@
+dart0.jpg
+Matched GT       : x: 430	y: 10	w: 180	h: 190
+Matched DetectBox: x: 440	y: 19	w: 166	h: 166
+Best IOU         : 0.806
+TPR: 1.0
+FPR: 0.933
+F1 : 0.125
+
+dart1.jpg
+TPR: 0.0
+FPR: 1.0
+F1 : 0.0
+
+dart2.jpg
+Matched GT       : x: 100	y: 96	w: 92	h: 95
+Matched DetectBox: x: 90	y: 86	w: 116	h: 116
+Best IOU         : 0.65
+TPR: 1.0
+FPR: 0.923
+F1 : 0.143
+
+dart3.jpg
+Matched GT       : x: 324	y: 150	w: 70	h: 67
+Matched DetectBox: x: 322	y: 147	w: 71	h: 71
+Best IOU         : 0.905
+TPR: 1.0
+FPR: 0.875
+F1 : 0.222
+
+dart4.jpg
+Matched GT       : x: 220	y: 125	w: 140	h: 140
+Matched DetectBox: x: 234	y: 137	w: 113	h: 113
+Best IOU         : 0.651
+TPR: 1.0
+FPR: 0.875
+F1 : 0.222
+
+dart5.jpg
+Matched GT       : x: 454	y: 160	w: 65	h: 65
+Matched DetectBox: x: 444	y: 150	w: 79	h: 79
+Best IOU         : 0.677
+TPR: 1.0
+FPR: 0.941
+F1 : 0.111
+
+dart6.jpg
+TPR: 0.0
+FPR: 1.0
+F1 : 0.0
+
+dart7.jpg
+Matched GT       : x: 265	y: 190	w: 100	h: 100
+Matched DetectBox: x: 273	y: 179	w: 123	h: 123
+Best IOU         : 0.578
+TPR: 1.0
+FPR: 0.929
+F1 : 0.133
+
+dart8.jpg
+Matched GT       : x: 850	y: 222	w: 100	h: 100
+Matched DetectBox: x: 842	y: 220	w: 123	h: 123
+Best IOU         : 0.661
+TPR: 0.5
+FPR: 0.952
+F1 : 0.087
+
+dart9.jpg
+Matched GT       : x: 200	y: 50	w: 230	h: 230
+Matched DetectBox: x: 211	y: 55	w: 209	h: 209
+Best IOU         : 0.826
+TPR: 1.0
+FPR: 0.875
+F1 : 0.222
+
+dart10.jpg
+TPR: 0.0
+FPR: 1.0
+F1 : 0.0
+
+dart11.jpg
+Matched GT       : x: 183	y: 118	w: 40	h: 40
+Matched DetectBox: x: 180	y: 116	w: 54	h: 54
+Best IOU         : 0.549
+TPR: 1.0
+FPR: 0.929
+F1 : 0.133
+
+dart12.jpg
+TPR: 0.0
+FPR: 1.0
+F1 : 0.0
+
+dart13.jpg
+Matched GT       : x: 280	y: 120	w: 120	h: 125
+Matched DetectBox: x: 260	y: 124	w: 156	h: 156
+Best IOU         : 0.585
+TPR: 1.0
+FPR: 0.929
+F1 : 0.133
+
+dart14.jpg
+Matched GT       : x: 128	y: 104	w: 115	h: 109
+Matched DetectBox: x: 116	y: 74	w: 151	h: 151
+Best IOU         : 0.55
+TPR: 0.5
+FPR: 0.984
+F1 : 0.032
+
+dart15.jpg
+Matched GT       : x: 167	y: 60	w: 112	h: 132
+Matched DetectBox: x: 157	y: 58	w: 124	h: 124
+Best IOU         : 0.828
+TPR: 1.0
+FPR: 0.8
+F1 : 0.333
+
