@@ -13,7 +13,7 @@ logging.basicConfig(
 
 
 cascade_name = "./Dartboardcascade/cascade.xml"
-IOU_thr = 0.5
+IOU_thr = 0.4
 
 # Circle Detector
 MIN_R = 30
@@ -22,7 +22,7 @@ SAMPLE_R = 10
 MAG_THR = 0.4
 CENTER_BIAS_X = 0.07
 CENTER_BIAS_Y = 0.07
-
+RADIUS_THR = 0.8
 
 
 class Circle:
@@ -35,13 +35,14 @@ class Circle:
         cv2.circle(frame, (int(self.x), int(self.y)), int(self.r), (0, 255, 0), 2)
 
     def __str__(self):
-        return f"center: {self.x, self.y} \tradius: {self.r}"
+        return f"center: {self.x, self.y} \tradius: {round(self.r, 2)}"
 
 class BoundingBox:
     def __init__(self, *args):
         if len(args) == 4:
             # x, y, width, height
             self.x, self.y, self.width, self.height = args
+            self.best_circle = None
 
         elif len(args) == 2:
             # start, end
@@ -50,6 +51,7 @@ class BoundingBox:
             self.y = start[1]
             self.width = end[0] - start[0]
             self.height = end[1] - start[1]
+            self.best_circle = None
         else:
             raise RuntimeError("Wrong BBox init")
     
@@ -66,6 +68,10 @@ class BoundingBox:
 
     def __str__(self):
         return f"x: {int(self.x)}\ty: {int(self.y)}\tw: {int(self.width)}\th: {int(self.height)}"
+    
+    def draw(self, frame):
+        start_point, end_point = self.twoPoints
+        frame = cv2.rectangle(frame, start_point, end_point, (255, 0, 0), 2)
 
 def correlation(image, kernel):
     height, width = image.shape
@@ -164,9 +170,6 @@ def detectAndDisplay(frame):
     for i in range(0, len(faces)):
         start_point = (faces[i][0], faces[i][1])
         end_point = (faces[i][0] + faces[i][2], faces[i][1] + faces[i][3])
-        colour = (0, 255, 0)
-        thickness = 2
-        frame = cv2.rectangle(frame, start_point, end_point, colour, thickness)
         bboxes.append(BoundingBox(start_point, end_point))
     return bboxes
 
@@ -195,6 +198,11 @@ def drawGTBox(frame, ground_truth):
         cv2.rectangle(frame, start, end, (0, 0, 255), 2)   # red box
     return frame
 
+def drawBBox(frame, BBoxes: List[BoundingBox]):
+    for box in BBoxes:
+        if box.best_circle is not None:
+            box.draw(frame)
+
 def hough_fix_r(mag, dir, r, mask):
     h, w = mag.shape
     acc = np.zeros((h, w))
@@ -214,8 +222,6 @@ def circlesDectection(bboxes: List[BoundingBox], min_r: int, max_r: int, sample_
     circles = []
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
-
-    print("Start circles detection: ")
     for box in bboxes:
         region = selectRegion(frame_gray, box)
         magnitude, direction = sobel(region)
@@ -232,6 +238,8 @@ def circlesDectection(bboxes: List[BoundingBox], min_r: int, max_r: int, sample_
         for i, r in enumerate(radii):
             acc[i] = hough_fix_r(magnitude, direction, r, mask)
 
+        best_r = 0
+        best_center = (0, 0)
         for i, r in enumerate(radii):
             acc_i = acc[i]
             max_vote = acc_i.max()
@@ -248,11 +256,35 @@ def circlesDectection(bboxes: List[BoundingBox], min_r: int, max_r: int, sample_
                 x_flag = box.x + (0.5 - CENTER_BIAS_X) * box.width  < global_x < box.x + (0.5 + CENTER_BIAS_X) * box.width
                 y_flag = box.y + (0.5 - CENTER_BIAS_Y) * box.height < global_y < box.y + (0.5 + CENTER_BIAS_Y) * box.height
                 if x_flag and y_flag:
-                    circle = Circle(global_x, global_y, r)
-                    circles.append(circle)
-                    print(circle)
+                    if r > best_r:
+                        best_r = r
+                        best_center = global_x, global_y
+        # Best r is greater than (average width + height) * RADIUS_THR
+        if best_r > RADIUS_THR * (box.height + box.width) / 4:
+            circle = Circle(best_center[0], best_center[1], best_r)
+            box.best_circle = circle
+            circles.append(circle)
+            print(circle)
     return circles
         
+def benchmark(detectBBoxes: List[BoundingBox], realBBoxes: List[BoundingBox]):
+    TP = calculateTP(detectBBoxes=detectBBoxes, realBBoxes=realBBoxes)
+    FP = len(detectBBoxes) - TP
+    FN = len(realBBoxes) - TP
+    TPR = TP / len(realBBoxes)
+    if len(detectBBoxes) == 0:
+        FPR = 0.0
+    else:
+        FPR = FP / len(detectBBoxes)
+    if TP + FP == 0:
+        precision = 0
+    else:
+        precision = TP / (TP + FP)
+    f1 = calculateF1Score(recall=TPR, precision=precision)
+    logging.info(f"TPR: {round(TPR, 3)}")
+    logging.info(f"FPR: {round(FPR, 3)}")
+    logging.info(f"F1 : {round(f1, 3)}")
+
 model = cv2.CascadeClassifier(cascade_name)
 imageNames = []
 ground_truth = readGroundtruth("./ground_truth.txt")
@@ -260,27 +292,20 @@ ground_truth = readGroundtruth("./ground_truth.txt")
 
 for name in imageNames:
     logging.info(name + ".jpg")
+    print(name)
+
     frame = cv2.imread("./Dartboard/" + name + ".jpg", 1)
     detectBBoxes = detectAndDisplay(frame)
     realBBoxes = ground_truth[name]
 
     circles = circlesDectection(bboxes=detectBBoxes, min_r=MIN_R, max_r=MAX_R, sample_r=SAMPLE_R)
+    detectBBoxes = [box for box in detectBBoxes if box.best_circle is not None]
 
-    for c in circles:
-        print(c)
-
-    TP = calculateTP(detectBBoxes=detectBBoxes, realBBoxes=realBBoxes)
-    FP = len(detectBBoxes) - TP
-    FN = len(realBBoxes) - TP
-    TPR = TP / len(realBBoxes)
-    FPR = FP / len(detectBBoxes)
-    precision = TP / (TP + FP)
-    f1 = calculateF1Score(recall=TPR, precision=precision)
-    logging.info(f"TPR: {round(TPR, 3)}")
-    logging.info(f"FPR: {round(FPR, 3)}")
-    logging.info(f"F1 : {round(f1, 3)}")
+    # Drawing
+    drawBBox(frame, BBoxes=detectBBoxes)
     for circle in circles:
         circle.draw(frame)
     drawGTBox(frame, ground_truth[name])
+    benchmark(detectBBoxes, realBBoxes)
     cv2.imwrite(f"./DartboardOut/{name}.jpg", frame)
     logging.info("")
